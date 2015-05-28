@@ -1,6 +1,8 @@
 /*
- Very simple Arduino Lithium-ion battery capacity tester
- from electronicsblog.net
+This sketch monitors the variables of a battery as it discharges and gives you the total milliamp hours capacity of the battery
+
+Based on original sketch from electronicsblog.net
+
 todo:  add safety circuit
        add selectable voltage? need?
        flashing LED to show finished state
@@ -9,16 +11,16 @@ todo:  add safety circuit
 #include <LiquidCrystal.h>
 #define LED 13
 
-LiquidCrystal lcd(12, 11, 5, 4, 3, 2);
-
+//LiquidCrystal lcd(12, 11, 6, 5, 4, 3);
+LiquidCrystal lcd(12, 11, 3, 4, 5, 6);
 
 // Change the values directly below to suit your discharge resistor
 int resistor = 25; // a 10 ohm resistor would be optimal
 int maxWatts = 25; // if you exceed this value you will fry your resistor   //Need to add code and circuit to break circuit if this is exceeded
 // Thats it!
 
-int watts = 0;
-float capacity = 0, value, voltage, current, time = 0;
+int capacitymAh = 0;
+float capacity = 0, value, voltage, current, time = 0, watts = 0;
 
 void measure (void) {
   value = analogRead(0);
@@ -26,13 +28,16 @@ void measure (void) {
   current = voltage / resistor;
   capacity = capacity + current / 3600;
   watts = voltage * current;
-          time++;
+  capacitymAh = capacity * 1000;
+  time++;
   Serial.print("Voltage= ");
   Serial.print(voltage);
   Serial.print("V Current= ");
   Serial.print(current);
   Serial.print("A Capacity= ");
-  Serial.print(capacity / 1000);
+   Serial.print(capacity);
+     Serial.print(" ");
+  Serial.print(capacitymAh);
   Serial.print("mAh ");
   Serial.print(" Watts= ");
   Serial.print(watts);
@@ -41,18 +46,23 @@ void measure (void) {
   Serial.print(time / 60);
   Serial.println("m ");
 
-  lcd.setCursor(0, 1);
-  lcd.print("V: ");
+  lcd.setCursor(0, 0);
+ // lcd.print("V:");
   lcd.print(voltage);
-  lcd.print(" I: ");
+  lcd.print("V ");
   lcd.print(current);
-  lcd.print(" W: ");
+  lcd.print("A ");
   lcd.print(watts);
+  lcd.print("W");
 
-  lcd.setCursor(0, 2);
-  lcd.print("Time: ");
+  lcd.setCursor(0, 1);
+  lcd.print("T:");
   lcd.print(time / 60);
-  lcd.print(" Minutes");
+  lcd.print("M ");
+  lcd.print("C:");
+  lcd.print(capacitymAh);
+    lcd.print("mAh");
+  
 }
 boolean x = false;
 ISR(TIMER1_OVF_vect) {
@@ -72,7 +82,9 @@ void setup() {
   Serial.begin(9600);
 };
 void loop () {
-  digitalWrite(LED, x);
+  if (voltage=0) {
+      digitalWrite(LED, x);
+  }
 
 };
 
