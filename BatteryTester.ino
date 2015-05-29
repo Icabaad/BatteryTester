@@ -17,6 +17,7 @@ LiquidCrystal lcd(12, 11, 3, 4, 5, 6);
 // Change the values directly below to suit your discharge resistor
 int resistor = 25; // a 10 ohm resistor would be optimal
 int maxWatts = 25; // if you exceed this value you will fry your resistor   //Need to add code and circuit to break circuit if this is exceeded
+float powerV = 4.34; // If readings are off check arduino supply voltage and adjust here
 // Thats it!
 
 int capacitymAh = 0;
@@ -24,7 +25,7 @@ float capacity = 0, value, voltage, current, time = 0, watts = 0;
 
 void measure (void) {
   value = analogRead(0);
-  voltage = value / 1024 * 5.0;
+  voltage = (value / 1024) * powerV;
   current = voltage / resistor;
   capacity = capacity + current / 3600;
   watts = voltage * current;
@@ -82,7 +83,7 @@ void setup() {
   Serial.begin(9600);
 };
 void loop () {
-  if (voltage=0) {
+  if (voltage==0.00) { //flash LED when test complete (lithium battery under voltage cutoff)  
       digitalWrite(LED, x);
   }
 
