@@ -1,15 +1,17 @@
 /*
-This sketch monitors the variables of a battery as it discharges and gives you the total milliamp hours capacity of the battery
+  This sketch monitors the variables of a battery as it discharges and gives you the total milliamp hours capacity of the battery
 
-Based on original sketch from electronicsblog.net
+  Based on original sketch from electronicsblog.net
 
-todo:  add safety circuit
+  todo:  add safety circuit
        add selectable voltage? need?
        flashing LED to show finished state
 
 */
 #include <LiquidCrystal.h>
 #include <Time.h>
+#include <DS1307RTC.h>
+
 #define LED 13
 const int cutoffPin = 9;
 const int ratePin = 8;
@@ -19,11 +21,12 @@ const int startPin = 10;
 LiquidCrystal lcd(12, 11, 3, 4, 5, 6);
 
 // Change the values directly below to suit your discharge resistor
-int slowResistor = 15; // a 15 ohm resistor would be optimal
-int fastResistor = 5; //faster discharge of battery. More heat and possible battery shutout on smaller capacities. Use slow discharge for those.
-int slowMaxWatts = 25; // if you exceed this value you will fry your resistor   //Need to add code and circuit to break circuit if this is exceeded
+int slowResistor = 5; // a 15 ohm resistor would be optimal
+int fastResistor = 5; //Ohms faster discharge of battery. More heat and possible battery shutout on smaller capacities. Use slow discharge for those.
+int slowMaxWatts = 5; // if you exceed this value you will fry your resistor   //Need to add code and circuit to break circuit if this is exceeded
 int fastMaxWatts = 50;
 float powerV = 4.34; // If readings are off check arduino supply voltage and adjust here
+int rateSwitch = 0;
 // Thats it!
 
 float voltageCutoff = 2.00; // if the LiPo battery does not have internal cutoff security this will stop the test before damaging battery.
@@ -41,6 +44,7 @@ boolean debounce(int pin) {
   boolean state;
   boolean previousState;
 
+  //switch debounce
   previousState = digitalRead(pin);
   for (int counter = 0; counter < debounceDelay; counter++) {
     delay(1);
@@ -59,12 +63,14 @@ boolean x = false;
 ISR(TIMER1_OVF_vect) {
   TCNT1 = 0x0BDC;
   x = !x;
-  Serial.print("ratePin2= ");
+  Serial.print("ratePin= ");
   Serial.println(digitalRead(ratePin));
-  if (ratePin == 0) {
+rateSwitch =(digitalRead(ratePin));
+  if (rateSwitch == 0) {
     slowmeasure();
   }
-  else if (ratePin == 1) {
+  else if (rateSwitch == 1) {
+
     fastmeasure();
   }
 }
@@ -91,7 +97,10 @@ void setup() {
   TCNT1 = 0x0BDC; // set initial value to remove time error (16bit counter register)
   TCCR1B = 0x04; // start timer/ set clock
   Serial.begin(9600);
+  Serial.println("new version");
 };
+
+
 void loop () {
   if (voltage == 0.00) { //flash LED when test complete (lithium battery under voltage cutoff)
     //digitalWrite(LED, x);
@@ -143,16 +152,18 @@ void loop () {
     processSecond = second();
     value = analogRead(0);
     voltage = (value / 1024) * powerV;
-    current = voltage / slowResistor;
+    current = voltage / slowResistor; /////*****This needs fixing hard set to slow
     capacity = capacity + current / 3600;
     watts = voltage * current;
     capacitymAh = capacity * 1000;
     lcdupdate();
+
   }
 }
 
 //////////////////////////////////////////////////////////////////////////////
 void fastmeasure (void) {
+  Serial.println("Fast Discharge");
   value = analogRead(0);
   voltage = (value / 1024) * powerV;
   current = voltage / fastResistor;
@@ -211,6 +222,7 @@ void lcdupdate (void) {
 }
 
 void slowmeasure (void) {
+  Serial.println("Slow Discharge");
   value = analogRead(0);
   voltage = (value / 1024) * powerV;
   current = voltage / slowResistor;
