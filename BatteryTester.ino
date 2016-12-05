@@ -31,7 +31,7 @@ int rateSwitch = 0;
 
 float voltageCutoff = 2.5; // if the LiPo battery does not have internal cutoff security this will stop the test before damaging battery.
 int capacitymAh = 0;
-float capacity = 0, value, voltage, current, time = 0, watts = 0;
+float capacity = 0, value, shuntV, current, batteryV, time = 0, watts = 0;
 int buttonState = 0;
 int lastButtonState = LOW;
 int startState = 0;
@@ -102,11 +102,11 @@ void setup() {
 
 
 void loop () {
-  if (voltage == 0.00) { //flash LED when test complete (lithium battery under voltage cutoff)
+  if (shuntV == 0.00) { //flash LED when test complete (lithium battery under voltage cutoff)
     //digitalWrite(LED, x);
   }
 
-  if ((voltage <= voltageCutoff) && (voltage > 0.01)) {
+  if ((batteryV <= voltageCutoff) && (shuntV > 0.01)) {
     digitalWrite(cutoffPin, LOW);               //*****Finish this
     digitalWrite(LED, LOW);
     Serial.println("Voltage Cut Off Reached!");
@@ -153,143 +153,151 @@ void loop () {
   //hmmmm this has been functioned
   if (processSecond != second()) {
     processSecond = second();
- //   slowmeasure();
+    //   slowmeasure();
   }
-    /*
-      value = analogRead(0);
-      voltage = (value / 1024) * powerV;
-      current = voltage / slowResistor; /////*****This needs fixing hard set to slow
-      capacity = capacity + current / 3600;
-      watts = voltage * current;
-      capacitymAh = capacity * 1000;
-      lcdupdate();
-
-      }
-    */
-
-  }
-
-  //////////////////////////////////////////////////////////////////////////////
-  void fastmeasure (void) {
-    Serial.println("Fast Discharge");
+  /*
     value = analogRead(0);
     voltage = (value / 1024) * powerV;
-    current = voltage / fastResistor;
+    current = voltage / slowResistor; /////*****This needs fixing hard set to slow
     capacity = capacity + current / 3600;
     watts = voltage * current;
     capacitymAh = capacity * 1000;
-    time++;
-    Serial.print("Voltage= ");
-    Serial.print(voltage);
-    Serial.print("V Current= ");
-    Serial.print(current);
-    Serial.print("A Capacity= ");
-    Serial.print(capacity);
-    Serial.print(" ");
-    Serial.print(capacitymAh);
-    Serial.print("mAh ");
-    Serial.print(" Watts= ");
-    Serial.print(watts);
-    Serial.print("W ");
-    Serial.print("Discharging time= ");
-    Serial.print(time / 60);
-    Serial.println("m ");
+    lcdupdate();
 
-    lcd.setCursor(0, 0);
-    // lcd.print("V:");
-    lcd.print(voltage);
-    lcd.print("V ");
-    lcd.print(current);
-    lcd.print("A ");
-    lcd.print(watts);
-    lcd.print("W");
+    }
+  */
 
-    lcd.setCursor(0, 1);
-    lcd.print("T:");
-    lcd.print(time / 60);
-    lcd.print("M ");
-    lcd.print("C:");
-    lcd.print(capacitymAh);
-    lcd.print("mAh");
-  }
-  void lcdupdate (void) {
-    lcd.setCursor(0, 0);
-    lcd.print(voltage);
-    lcd.print("V ");
-    lcd.print(current);
-    lcd.print("A ");
-    lcd.print(watts);
-    lcd.print("W");
-    lcd.setCursor(0, 1);
-    lcd.print("T:");
-    lcd.print(time / 60);
-    lcd.print("M ");
-    lcd.print("C:");
-    lcd.print(capacitymAh);
-    lcd.print("mAh");
-  }
+}
 
-  void slowmeasure (void) {
-    Serial.println(" Slow Discharge");
-    value = analogRead(0);
-    voltage = (value / 1024) * powerV; // Takes analogue value and converts to V
-    current = voltage / slowResistor;
-    capacity = capacity + current / 3600;
-    watts = voltage * current;
-    capacitymAh = capacity * 1000;
-    time++;
-    Serial.print("Voltage= ");
-    Serial.print(voltage);
-    Serial.print("V Current= ");
-    Serial.print(current);
-    Serial.print("A Capacity= ");
-    Serial.print(capacity);
-    Serial.print(" ");
-    Serial.print(capacitymAh);
-    Serial.print("mAh ");
-    Serial.print(" Watts= ");
-    Serial.print(watts);
-    Serial.print("W ");
-    Serial.print("Discharging time= ");
-    Serial.print(time / 60);
-    Serial.println("m ");
+//////////////////////////////////////////////////////////////////////////////
+void fastmeasure (void) {
+  Serial.println("Fast Discharge");
+  value = analogRead(0);
+  shuntV = (value / 1024) * powerV;
+  value = analogRead(1);
+  batteryV = (value / 1024) * powerV;
+  current = shuntV / fastResistor;
+  capacity = capacity + current / 3600;
+  watts = shuntV * current;
+  capacitymAh = capacity * 1000;
+  time++;
+  Serial.print("Shunt Voltage= ");
+  Serial.print(shuntV);
+  Serial.print("Battery Voltage= ");
+  Serial.print(batteryV);
+  Serial.print("V Current= ");
+  Serial.print(current);
+  Serial.print("A Capacity= ");
+  Serial.print(capacity);
+  Serial.print(" ");
+  Serial.print(capacitymAh);
+  Serial.print("mAh ");
+  Serial.print(" Watts= ");
+  Serial.print(watts);
+  Serial.print("W ");
+  Serial.print("Discharging time= ");
+  Serial.print(time / 60);
+  Serial.println("m ");
 
-    lcd.setCursor(0, 0);
-    // lcd.print("V:");
-    lcd.print(voltage);
-    lcd.print("V ");
-    lcd.print(current);
-    lcd.print("A ");
-    lcd.print(watts);
-    lcd.print("W");
+  lcd.setCursor(0, 0);
+  // lcd.print("V:");
+  lcd.print(shuntV);
+  lcd.print("V ");
+  lcd.print(current);
+  lcd.print("A ");
+  lcd.print(watts);
+  lcd.print("W");
 
-    lcd.setCursor(0, 1);
-    lcd.print("T:");
-    lcd.print(time / 60);
-    lcd.print("M ");
-    lcd.print("C:");
-    lcd.print(capacitymAh);
-    lcd.print("mAh");
-  }
+  lcd.setCursor(0, 1);
+  lcd.print("T:");
+  lcd.print(time / 60);
+  lcd.print("M ");
+  lcd.print("C:");
+  lcd.print(capacitymAh);
+  lcd.print("mAh");
+}
+void lcdupdate (void) {
+  lcd.setCursor(0, 0);
+  lcd.print(shuntV);
+  lcd.print("V ");
+  lcd.print(current);
+  lcd.print("A ");
+  lcd.print(watts);
+  lcd.print("W");
+  lcd.setCursor(0, 1);
+  lcd.print("T:");
+  lcd.print(time / 60);
+  lcd.print("M ");
+  lcd.print("C:");
+  lcd.print(capacitymAh);
+  lcd.print("mAh");
+}
 
-  void digitalClockDisplay() {
-    // digital clock display of the time
-    Serial.print(hour());
-    printDigits(minute());
-    printDigits(second());
-    Serial.print(" ");
-    Serial.print(day());
-    Serial.print(" ");
-    Serial.print(month());
-    Serial.print(" ");
-    Serial.print(year());
-    Serial.println();
-  }
+void slowmeasure (void) {
+  Serial.println(" Slow Discharge");
+  value = analogRead(0);
+  shuntV = (value / 1024) * powerV; // Takes analogue value and converts to V
+  value = analogRead(1);
+  batteryV = (value / 1024) * powerV;
+  current = shuntV / slowResistor;
+  capacity = capacity + current / 3600;
+  watts = shuntV * current;
+  capacitymAh = capacity * 1000;
+  time++;
+  Serial.print("Shunt Voltage= ");
+  Serial.print(shuntV);
+  Serial.print("Battery Voltage= ");
+  Serial.print(batteryV);
+  Serial.print("V Current= ");
+  Serial.print(current);
+  Serial.print("A Capacity= ");
+  Serial.print(capacity);
+  Serial.print(" ");
+  Serial.print(capacitymAh);
+  Serial.print("mAh ");
+  Serial.print(" Watts= ");
+  Serial.print(watts);
+  Serial.print("W ");
+  Serial.print("Discharging time= ");
+  Serial.print(time / 60);
+  Serial.println("m ");
 
-  void printDigits(int digits) {
-    // utility function for digital clock display: prints preceding colon and leading 0
-    Serial.print(":");
-    if (digits < 10)
-      Serial.print('0');
-    Serial.print(digits);
-  }
+  lcd.setCursor(0, 0);
+  // lcd.print("V:");
+  lcd.print(shuntV);
+  lcd.print("V ");
+  lcd.print(current);
+  lcd.print("A ");
+  lcd.print(watts);
+  lcd.print("W");
+
+  lcd.setCursor(0, 1);
+  lcd.print("T:");
+  lcd.print(time / 60);
+  lcd.print("M ");
+  lcd.print("C:");
+  lcd.print(capacitymAh);
+  lcd.print("mAh");
+}
+
+void digitalClockDisplay() {
+  // digital clock display of the time
+  Serial.print(hour());
+  printDigits(minute());
+  printDigits(second());
+  Serial.print(" ");
+  Serial.print(day());
+  Serial.print(" ");
+  Serial.print(month());
+  Serial.print(" ");
+  Serial.print(year());
+  Serial.println();
+}
+
+void printDigits(int digits) {
+  // utility function for digital clock display: prints preceding colon and leading 0
+  Serial.print(":");
+  if (digits < 10)
+    Serial.print('0');
+  Serial.print(digits);
+}
