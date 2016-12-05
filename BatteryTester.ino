@@ -25,11 +25,11 @@ int slowResistor = 5; // a 15 ohm resistor would be optimal
 int fastResistor = 5; //Ohms faster discharge of battery. More heat and possible battery shutout on smaller capacities. Use slow discharge for those.
 int slowMaxWatts = 5; // if you exceed this value you will fry your resistor   //Need to add code and circuit to break circuit if this is exceeded
 int fastMaxWatts = 50;
-float powerV = 4.34; // If readings are off check arduino supply voltage and adjust here
+float powerV = 4.25; // If readings are off check arduino supply voltage and adjust here
 int rateSwitch = 0;
 // Thats it!
 
-float voltageCutoff = 3.00; // if the LiPo battery does not have internal cutoff security this will stop the test before damaging battery.
+float voltageCutoff = 2.5; // if the LiPo battery does not have internal cutoff security this will stop the test before damaging battery.
 int capacitymAh = 0;
 float capacity = 0, value, voltage, current, time = 0, watts = 0;
 int buttonState = 0;
@@ -64,7 +64,7 @@ ISR(TIMER1_OVF_vect) {
   TCNT1 = 0x0BDC;
   x = !x;
   Serial.print("ratePin= ");
-  Serial.println(digitalRead(ratePin));
+  Serial.print(digitalRead(ratePin));
   rateSwitch = (digitalRead(ratePin));
   if (rateSwitch == 0) {
     slowmeasure();
@@ -108,18 +108,21 @@ void loop () {
 
   if ((voltage <= voltageCutoff) && (voltage > 0.01)) {
     digitalWrite(cutoffPin, LOW);               //*****Finish this
+    digitalWrite(LED, LOW);
     Serial.println("Voltage Cut Off Reached!");
 
   }
   if (ratePin == LOW) {
     if  (watts >= slowMaxWatts) {
       digitalWrite(cutoffPin, LOW);
+      digitalWrite(LED, LOW);
       Serial.println("Watt limit reached on SLOW discharge!");
     }
 
     else if (ratePin == HIGH) {
       if  (watts >= fastMaxWatts) {
         digitalWrite(cutoffPin, LOW);
+        digitalWrite(LED, LOW);
         Serial.println("Watt limit reached on FAST discharge!");
       }
     }
@@ -140,7 +143,7 @@ void loop () {
       Serial.println("Go!");
       digitalWrite(cutoffPin, HIGH);
       buttonState = LOW;
-    } else {
+    } else  {
       digitalWrite(LED, LOW);
       digitalWrite(cutoffPin, LOW);
       Serial.println("No Go!");
@@ -227,7 +230,7 @@ void loop () {
   }
 
   void slowmeasure (void) {
-    Serial.println("Slow Discharge");
+    Serial.println(" Slow Discharge");
     value = analogRead(0);
     voltage = (value / 1024) * powerV; // Takes analogue value and converts to V
     current = voltage / slowResistor;
